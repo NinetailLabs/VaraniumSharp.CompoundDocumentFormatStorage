@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>VaraniumSharp.CompoundDocumentFormatStorage</name>
+    </assembly>
+    <members>
+        <member name="T:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.#ctor">
+            <summary>
+            DI Constructor
+            </summary>
+        </member>
+        <member name="P:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.AutoFlush">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.AddItemToPackageAsync(System.String,System.IO.Stream,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.RemoveDataFromPackageAsync(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.RetrieveDataFromPackageAsync(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageAsync(System.String,System.Collections.Generic.List{System.String})">
+            <inheritdoc />
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetCompoundFile(System.String)">
+            <summary>
+            Retrieve a compound file.
+            This method will create the file if it does not exist, otherwise it will retrieve the file from the internal storage or simply open the current file
+            </summary>
+            <param name="packagePath">Path of the CF</param>
+            <returns>Open compound file - Do not close!</returns>
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetStorage(OpenMcdf.CompoundFile,System.String)">
+            <summary>
+            Retrieve the CFStorage where the file in the path is stored
+            </summary>
+            <param name="compoundFile"></param>
+            <param name="filePath">FilePath where file is stored (including filename)</param>
+            <returns>CFStorage of appropriate level</returns>
+        </member>
+        <member name="M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.SubFolders(System.String)">
+            <summary>
+            Split a FilePath into the sub-directories
+            </summary>
+            <param name="fullPath">Full path to split</param>
+            <returns>Sub-directories</returns>
+        </member>
+        <member name="F:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager._concurrentFileRetrievalLocks">
+            <summary>
+            Semaphores used to lock access when attempting to open/create compound files on a drive
+            </summary>
+        </member>
+        <member name="F:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager._managedFiles">
+            <summary>
+            Collection of compound files that we manage
+            </summary>
+        </member>
+    </members>
+</doc>
