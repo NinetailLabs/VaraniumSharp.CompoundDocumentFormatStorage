@@ -21,7 +21,7 @@
 // Indicate if the unit tests passed
 var testPassed = false;
 // Path where coverage results should be saved
-var coverPath = "./opencovercoverage.xml";
+var coverPath = "./coverage.json";
 // Test result output file
 var testResultFile = "./TestResult.xml";
 // Filter used to locate unit test csproj files
@@ -92,6 +92,8 @@ private void ExecuteUnitTests()
                 }
             },
             GetMiniCoverSettings());
+
+            MiniCoverUninstrument();
 
             testPassed = true;
         }
