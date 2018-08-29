@@ -7,7 +7,6 @@
 #load "CakeScripts/base/base.nuget.restore.cake"
 #load "CakeScripts/base/base.msbuild.cake"
 #load "xunit.cake"
-#load "CakeScripts/base/base.coveralls.upload.cake"
 #load "CakeScripts/base/base.gitreleasenotes.cake"
 #load "nuget.pack.cake"
 #load "CakeScripts/base/base.nuget.push.cake"
@@ -40,7 +39,6 @@ Task ("Default")
 	.IsDependentOn ("NugetRestore")
 	.IsDependentOn ("Build")
 	.IsDependentOn ("UnitTests")
-	.IsDependentOn ("CoverageUpload")
 	.IsDependentOn ("GenerateReleaseNotes")
 	.IsDependentOn ("NugetPack")
 	.IsDependentOn ("NugetPush")

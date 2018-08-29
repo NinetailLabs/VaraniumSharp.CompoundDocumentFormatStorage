@@ -12,7 +12,7 @@
 
 #region AddIns
 
-#addin Cake.MiniCover
+#addin Cake.MiniCover&version=0.29.0-next20180721071547
 
 #endregion
 
@@ -28,7 +28,8 @@ var testResultFile = "./TestResult.xml";
 var unitTestProjectFilter = "./*Tests/*.Tests.csproj";
 // Filter used to locate unit test dlls
 var unitTestFilter = "./*Tests/bin/Release/netcoreapp2.1/*.Tests.dll";
-
+// Coverall token
+var coverallRepoToken = EnvironmentVariable("CoverallRepoToken");
 
 #endregion
 
@@ -92,17 +93,36 @@ private void ExecuteUnitTests()
                 }
             },
             GetMiniCoverSettings());
-
             MiniCoverUninstrument();
-            MiniCoverReport(new MiniCoverSettings().GenerateReport(ReportType.COVERALLS | ReportType.XML));
 
+            if(string.IsNullOrEmpty(coverallRepoToken))
+            {
+                MiniCoverReport(new MiniCoverSettings().GenerateReport(ReportType.XML));
+            }
+            else
+            {
+                MiniCoverReport(new MiniCoverSettings
+                {
+                    Coveralls = GetCoverallSettings()
+                }.GenerateReport(ReportType.COVERALLS | ReportType.XML));
+            }
             testPassed = true;
         }
         catch(Exception)
         {
             Error("There was an error while executing tests");
-        }
-    
+        }    
+}
+
+// Get settings for Coverall result posting
+private CoverallsSettings GetCoverallSettings()
+{
+    return new CoverallsSettings
+    {
+        Branch = branch,
+        CommitHash = gitHash,
+        RepoToken = coverallRepoToken
+    };
 }
 
 // Get settings for DotNetCoreTests
