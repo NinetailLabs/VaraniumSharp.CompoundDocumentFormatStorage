@@ -21,7 +21,7 @@
 // Indicate if the unit tests passed
 var testPassed = false;
 // Path where coverage results should be saved
-var coverPath = "./coverage.json";
+var coverPath = "./coverage.xml";
 // Test result output file
 var testResultFile = "./TestResult.xml";
 // Filter used to locate unit test csproj files
@@ -94,6 +94,7 @@ private void ExecuteUnitTests()
             GetMiniCoverSettings());
 
             MiniCoverUninstrument();
+            MiniCoverReport(new MiniCoverSettings().GenerateReport(ReportType.COVERALLS | ReportType.XML));
 
             testPassed = true;
         }
@@ -120,8 +121,7 @@ private DotNetCoreTestSettings GetTestSettings()
 private MiniCoverSettings GetMiniCoverSettings()
 {
     return new MiniCoverSettings()
-        .WithAssembliesMatching(unitTestFilter)
-        .GenerateReport(ReportType.OPENCOVER | ReportType.CONSOLE);
+        .WithAssembliesMatching(unitTestFilter);
 }
 
 #endregion
