@@ -9,7 +9,7 @@
 #load "xunit.cake"
 #load "CakeScripts/base/base.coveralls.upload.cake"
 #load "CakeScripts/base/base.gitreleasenotes.cake"
-#load "CakeScripts/base/base.nuget.pack.cake"
+#load "nuget.pack.cake"
 #load "CakeScripts/base/base.nuget.push.cake"
 #load "CakeScripts/base/base.docfx.cake"
 
