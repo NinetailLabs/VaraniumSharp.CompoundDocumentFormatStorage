@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
@@ -29,6 +29,10 @@
     <None Update="Resources\File2.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+   <ItemGroup>
+    <DotNetCliToolReference Include="MiniCover" Version="2.0.0-ci-20180729170656" />
   </ItemGroup>
 
 </Project>

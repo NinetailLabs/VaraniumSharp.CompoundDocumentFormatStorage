@@ -1,6 +1,7 @@
 /*
- * Execute NUnit tests.
- * Script uses OpenCover to calculate coverage results
+ * Execute DotNetCore tests
+ * Script uses MiniCover to provide code coverage
+ * MiniCover requires setting  [SetMiniCoverToolsProject("");] to a project that contains the MiniCover cli tool
  */
 
 #region Tools
@@ -9,16 +10,25 @@
 
 #endregion
 
+#region AddIns
+
+#addin Cake.MiniCover
+
+#endregion
+
 #region Variables
 
 // Indicate if the unit tests passed
 var testPassed = false;
 // Path where coverage results should be saved
-var coverPath = "./coverageResults.xml";
+var coverPath = "./opencovercoverage.xml";
 // Test result output file
 var testResultFile = "./TestResult.xml";
+// Filter used to locate unit test csproj files
+var unitTestProjectFilter = "./*Tests/*.Tests.csproj";
 // Filter used to locate unit test dlls
-var unitTestFilter = "./*Tests/*.Tests.csproj";
+var unitTestFilter = "./*Tests/bin/Release/netcoreapp2.1/*.Tests.dll";
+
 
 #endregion
 
@@ -69,64 +79,47 @@ private void RemoveCoverageResults()
 private void ExecuteUnitTests()
 {
     Information("Running tests");
-    var testAssemblies = GetFiles(unitTestFilter);
-    foreach(var entry in testAssemblies)
-    {
-        Information(entry);   
+    var testAssemblies = GetFiles(unitTestProjectFilter);
     
+           
         try
         {
-           DotNetCoreTest(entry.FullPath, GetTestSettings());
-            
-            // OpenCover(tool =>
-            //     {
-            //         tool.XUnit2(testAssemblies, GetXunitSettings());
-            //     },
-            //     new FilePath(coverPath),
-            //     GetOpenCoverSettings()
-            // );
-            
+            MiniCover(tool => {
+                foreach(var project in testAssemblies)
+                {
+                    Information($"Running tests for {project}");
+                    tool.DotNetCoreTest(project.FullPath, GetTestSettings());
+                }
+            },
+            GetMiniCoverSettings());
+
             testPassed = true;
         }
         catch(Exception)
         {
             Error("There was an error while executing tests");
         }
-    }
+    
 }
 
+// Get settings for DotNetCoreTests
 private DotNetCoreTestSettings GetTestSettings()
 {
     return new DotNetCoreTestSettings
     {
         NoBuild = true,
+        Configuration = buildConfiguration,
         ResultsDirectory = ".",
         Logger = $"trx;LogFileName={testResultFile}"
     };
 }
 
-// Get filter string for OpenCover to ensure all project files are included and all test 
-// projects are excluded
-private OpenCoverSettings GetOpenCoverSettings()
+// Get setting for MiniCover
+private MiniCoverSettings GetMiniCoverSettings()
 {
-    var inclusionFilter = "";
-    var exclusionFilter = "";
-    foreach(var test in testFiles)
-    {
-        exclusionFilter += $"-[{test.Key}]* ";
-    }
-    foreach(var project in projectFiles)
-    {
-        inclusionFilter += $"+[{project.Key}]* ";
-    }
-
-    return new OpenCoverSettings
-    {
-        MergeOutput = true,
-        ReturnTargetCodeOffset = 0
-    }
-    .WithFilter($"{inclusionFilter} {exclusionFilter}")
-    .ExcludeByAttribute("System.CodeDom.Compiler.GeneratedCodeAttribute");
+    return new MiniCoverSettings()
+        .WithAssembliesMatching(unitTestFilter)
+        .GenerateReport(ReportType.OPENCOVER | ReportType.CONSOLE);
 }
 
 #endregion

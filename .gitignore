@@ -40,6 +40,11 @@ errors.xml
 dotcover.html
 dotcover/
 
+# MiniCover
+opencovercoverage.xml
+coverage.json
+coverage-hits.txt
+
 # Cake Build
 tools/
 

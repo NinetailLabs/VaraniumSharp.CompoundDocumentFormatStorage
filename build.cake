@@ -17,6 +17,8 @@
 
 #region Tasks
 
+SetMiniCoverToolsProject("./VaraniumSharp.CompoundDocumentFormatStorage.Tests/VaraniumSharp.CompoundDocumentFormatStorage.Tests.csproj");
+
 // Set up variables specific for the project
 Task ("VariableSetup")
 	.Does(() => {
