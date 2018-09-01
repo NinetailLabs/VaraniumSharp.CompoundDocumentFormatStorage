@@ -27,7 +27,11 @@ var testResultFile = "./TestResult.xml";
 // Filter used to locate unit test csproj files
 var unitTestProjectFilter = "./*Tests/*.Tests.csproj";
 // Filter used to locate unit test dlls
-var unitTestFilter = "./*Tests/bin/Release/netcoreapp2.1/*.Tests.dll";
+var unitTestFilter = "./*Tests/bin/Release/netcoreapp2.1/*.dll";
+// Filter for source code files that must be included in the coverage results
+var sourceCodeFilter = "./**/*.cs";
+// Filter for source code files that must be excluded from the coverage results
+var testCodeFilter = "./*Tests/*.cs";
 // Coverall token
 var coverallRepoToken = EnvironmentVariable("CoverallRepoToken");
 
@@ -81,37 +85,36 @@ private void ExecuteUnitTests()
 {
     Information("Running tests");
     var testAssemblies = GetFiles(unitTestProjectFilter);
-    
-           
-        try
-        {
-            MiniCover(tool => {
-                foreach(var project in testAssemblies)
-                {
-                    Information($"Running tests for {project}");
-                    tool.DotNetCoreTest(project.FullPath, GetTestSettings());
-                }
-            },
-            GetMiniCoverSettings());
-            MiniCoverUninstrument();
+             
+    try
+    {
+        MiniCover(tool => {
+            foreach(var project in testAssemblies)
+            {
+                Information($"Running tests for {project}");
+                tool.DotNetCoreTest(project.FullPath, GetTestSettings());
+            }
+        },
+        GetMiniCoverSettings());
+        MiniCoverUninstrument();
 
-            if(string.IsNullOrEmpty(coverallRepoToken))
-            {
-                MiniCoverReport(new MiniCoverSettings().GenerateReport(ReportType.XML));
-            }
-            else
-            {
-                MiniCoverReport(new MiniCoverSettings
-                {
-                    Coveralls = GetCoverallSettings()
-                }.GenerateReport(ReportType.COVERALLS | ReportType.XML));
-            }
-            testPassed = true;
-        }
-        catch(Exception)
+        if(string.IsNullOrEmpty(coverallRepoToken))
         {
-            Error("There was an error while executing tests");
-        }    
+            MiniCoverReport(new MiniCoverSettings().GenerateReport(ReportType.XML));
+        }
+        else
+        {
+            MiniCoverReport(new MiniCoverSettings
+            {
+                Coveralls = GetCoverallSettings()
+            }.GenerateReport(ReportType.COVERALLS | ReportType.XML));
+        }
+        testPassed = true;
+    }
+    catch(Exception)
+    {
+        Error("There was an error while executing tests");
+    }    
 }
 
 // Get settings for Coverall result posting
@@ -141,7 +144,9 @@ private DotNetCoreTestSettings GetTestSettings()
 private MiniCoverSettings GetMiniCoverSettings()
 {
     return new MiniCoverSettings()
-        .WithAssembliesMatching(unitTestFilter);
+        .WithAssembliesMatching(unitTestFilter)
+        .WithoutSourcesMatching(testCodeFilter)
+        .WithSourcesMatching(sourceCodeFilter);
 }
 
 #endregion

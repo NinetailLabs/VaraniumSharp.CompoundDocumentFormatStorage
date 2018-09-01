@@ -1,9 +1,9 @@
-﻿using OpenMcdf;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using VaraniumSharp.Attributes;
 using VaraniumSharp.Enumerations;
@@ -22,201 +22,187 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
         /// </summary>
         public CompoundFileManager()
         {
-            _managedFiles = new ConcurrentDictionary<string, CompoundFile>();
-            _concurrentFileRetrievalLocks = new ConcurrentDictionary<string, object>();
+            _containerLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
+            _openCompoundFiles = new ConcurrentDictionary<string, CompoundFileContainer>();
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Properties
 
         /// <inheritdoc />
         public bool AutoFlush { get; set; }
 
-        #endregion
+        #endregion Properties
 
         #region Public Methods
 
         /// <inheritdoc />
-        public Task AddItemToPackageAsync(string packagePath, Stream data, string storagePath)
+        public async Task AddItemToPackageAsync(string packagePath, Stream data, string storagePath)
         {
-            var cf = GetCompoundFile(packagePath);
-            var storage = GetStorage(cf, storagePath);
-            var filename = Path.GetFileName(storagePath);
+            var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
 
-            var currentStream = storage.TryGetStream(filename);
-            if (currentStream != null)
+            try
             {
-                currentStream.CopyFrom(data);
+                await semaphore.WaitAsync();
+                var cf = GetCompoundFile(packagePath);
+                var (directory, filename) = SplitFilepath(storagePath);
+                var storage = cf.GetStorageForPath(directory);
+                var currentStream = storage.TryGetStream(filename);
+                if (currentStream != null)
+                {
+                    currentStream.CopyFrom(data);
+                }
+                else
+                {
+                    var fileStream = storage.AddStream(filename);
+                    fileStream.CopyFrom(data);
+                }
+
+                cf.Commit();
             }
-            else
+            finally
             {
-                var fileStream = storage.AddStream(filename);
-                fileStream.CopyFrom(data);
+                semaphore.Release(1);
             }
-
-            cf.Commit();
-
-            return Task.CompletedTask;
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
-            foreach (var entry in _managedFiles)
+            foreach (var cf in _openCompoundFiles)
             {
-                entry.Value.Commit();
-                entry.Value.Close();
+                cf.Value.Close();
             }
-            _managedFiles.Clear();
         }
 
         /// <inheritdoc />
-        public Task RemoveDataFromPackageAsync(string packagePath, string storagePath)
+        public async Task RemoveDataFromPackageAsync(string packagePath, string storagePath)
         {
-            var cf = GetCompoundFile(packagePath);
-            var storage = GetStorage(cf, storagePath);
+            var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
 
-            var filename = Path.GetFileName(storagePath);
-            storage.Delete(filename);
-            cf.Commit();
-            return Task.CompletedTask;
+            try
+            {
+                await semaphore.WaitAsync();
+                var cf = GetCompoundFile(packagePath);
+                var (directory, filename) = SplitFilepath(storagePath);
+                var storage = cf.GetStorageForPath(directory);
+                storage.Delete(filename);
+                cf.Commit();
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         /// <inheritdoc />
         public async Task<Stream> RetrieveDataFromPackageAsync(string packagePath, string storagePath)
         {
-            var cf = GetCompoundFile(packagePath);
-            var storage = GetStorage(cf, storagePath);
-
-            var filename = Path.GetFileName(storagePath);
-            var stream = storage.TryGetStream(filename);
-            if (stream == null)
+            var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
+            try
             {
-                await Task.Delay(1);
-                throw new KeyNotFoundException();
-            }
+                await semaphore.WaitAsync();
+                var (directory, filename) = SplitFilepath(storagePath);
+                var cf = GetCompoundFile(packagePath);
+                var storage = cf.GetStorageForPath(directory);
+                var stream = storage.TryGetStream(filename);
+                if (stream == null)
+                {
+                    await Task.Delay(1);
+                    throw new KeyNotFoundException();
+                }
 
-            return new MemoryStream(stream.GetData());
+                var data = stream.GetData();
+                return new MemoryStream(data);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         /// <inheritdoc />
-        public Task ScrubStorageAsync(string packagePath, List<string> storagePathsToKeep)
+        public async Task ScrubStorageAsync(string packagePath, List<string> storagePathsToKeep)
         {
-            var cf = GetCompoundFile(packagePath);
-            var splitFiles = storagePathsToKeep
-                .Select(x => new { Directory = Path.GetDirectoryName(x), FileName = Path.GetFileName(x) })
-                .GroupBy(arg => arg.Directory);
+            var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
 
-            foreach (var group in splitFiles)
+            try
             {
-                var files = group.Select(x => x.FileName).ToList();
-                var storage = GetStorage(cf, group.Key);
-                storage.VisitEntries(item =>
+                await semaphore.WaitAsync();
+
+                var splitFiles = storagePathsToKeep
+                    .Select(x => new { Directory = Path.GetDirectoryName(x), FileName = Path.GetFileName(x) })
+                    .GroupBy(arg => arg.Directory);
+
+                var cf = GetCompoundFile(packagePath);
+                foreach (var group in splitFiles)
                 {
-                    if (!files.Contains(item.Name))
+                    var files = group.Select(x => x.FileName).ToList();
+                    var storage = cf.GetStorageForPath(group.Key);
+                    storage.VisitEntries(item =>
                     {
-                        storage.Delete(item.Name);
-                    }
-                }, false);
+                        if (!files.Contains(item.Name))
+                        {
+                            storage.Delete(item.Name);
+                        }
+                    }, false);
 
-                cf.Commit();
+                    cf.Commit();
+                }
             }
-
-            return Task.CompletedTask;
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
-        #endregion
+        #endregion Public Methods
 
         #region Private Methods
 
         /// <summary>
-        /// Retrieve a compound file.
-        /// This method will create the file if it does not exist, otherwise it will retrieve the file from the internal storage or simply open the current file
+        /// Retrieve a Compound File Container
+        /// Note that this method does not lock the container lock in <see cref="_containerLocks"/>, this is the caller's responsibility
         /// </summary>
-        /// <param name="packagePath">Path of the CF</param>
-        /// <returns>Open compound file - Do not close!</returns>
-        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField", Justification = "This is done to prevent paying the lock cost on each access attempt - If the file is already in the collection there is no point in locking")]
-        private CompoundFile GetCompoundFile(string packagePath)
+        /// <param name="packagePath">Path of the Compound File</param>
+        /// <returns>CompoundFileContainer with the opened compound file</returns>
+        private CompoundFileContainer GetCompoundFile(string packagePath)
         {
-            if (!_managedFiles.ContainsKey(packagePath))
+            if (!_openCompoundFiles.ContainsKey(packagePath))
             {
-                var padlock = _concurrentFileRetrievalLocks.GetOrAdd(packagePath, new object());
-                lock (padlock)
-                {
-                    if (!_managedFiles.ContainsKey(packagePath))
-                    {
-                        if (!File.Exists(packagePath))
-                        {
-                            var ncf = new CompoundFile(CFSVersion.Ver_4, CFSConfiguration.Default);
-                            ncf.Save(packagePath);
-                            ncf.Close();
-                        }
-
-                        var stream = File.Open(packagePath, FileMode.Open, FileAccess.ReadWrite);
-                        _managedFiles.TryAdd(packagePath, new CompoundFile(stream, CFSUpdateMode.Update, CFSConfiguration.Default));
-                    }
-                }
+                _openCompoundFiles.TryAdd(packagePath, new CompoundFileContainer(packagePath));
             }
 
-            return _managedFiles[packagePath];
+            return _openCompoundFiles[packagePath];
         }
 
         /// <summary>
-        /// Retrieve the CFStorage where the file in the path is stored
+        /// Split a filepath into a Directory and Filename
         /// </summary>
-        /// <param name="compoundFile"></param>
-        /// <param name="filePath">FilePath where file is stored (including filename)</param>
-        /// <returns>CFStorage of appropriate level</returns>
-        private static CFStorage GetStorage(CompoundFile compoundFile, string filePath)
+        /// <param name="filePath">Path to split</param>
+        /// <returns>Tuple containing directory and filename</returns>
+        private (string directory, string filename) SplitFilepath(string filePath)
         {
-            var storage = compoundFile.RootStorage;
-            foreach (var dir in SubFolders(filePath))
-            {
-                var subStorage = storage.TryGetStorage(dir);
-                if (subStorage == null)
-                {
-                    subStorage = storage.AddStorage(dir);
-                }
-
-                storage = subStorage;
-            }
-
-            return storage;
+            var directory = Path.GetDirectoryName(filePath);
+            var filename = Path.GetFileName(filePath);
+            return new ValueTuple<string, string>(directory, filename);
         }
 
-        /// <summary>
-        /// Split a FilePath into the sub-directories
-        /// </summary>
-        /// <param name="fullPath">Full path to split</param>
-        /// <returns>Sub-directories</returns>
-        private static IEnumerable<string> SubFolders(string fullPath)
-        {
-            if (!fullPath.Contains(Path.DirectorySeparatorChar) && !fullPath.Contains(Path.AltDirectorySeparatorChar))
-            {
-                return new []{ fullPath };
-            }
-
-            var split = Path.GetDirectoryName(fullPath)?.Split(Path.DirectorySeparatorChar);
-            return split
-                ?.ToList()
-                ?? new List<string>();
-        }
-
-        #endregion
+        #endregion Private Methods
 
         #region Variables
 
         /// <summary>
-        /// Semaphores used to lock access when attempting to open/create compound files on a drive
-        /// </summary>
-        private readonly ConcurrentDictionary<string, object> _concurrentFileRetrievalLocks;
-
-        /// <summary>
         /// Collection of compound files that we manage
         /// </summary>
-        private readonly ConcurrentDictionary<string, CompoundFile> _managedFiles;
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _containerLocks;
 
-        #endregion
+        /// <summary>
+        /// Collection of Compound File Containers that has already been opened
+        /// </summary>
+        private readonly ConcurrentDictionary<string, CompoundFileContainer> _openCompoundFiles;
+
+        #endregion Variables
     }
 }
