@@ -6,9 +6,9 @@
 #load "CakeScripts/base/base.setup.cake"
 #load "CakeScripts/base/base.nuget.restore.cake"
 #load "CakeScripts/base/base.msbuild.cake"
-#load "xunit.cake"
+#load "CakeScripts/base/base.dotnetcoretest.minicover.cake"
 #load "CakeScripts/base/base.gitreleasenotes.cake"
-#load "nuget.pack.cake"
+#load "CakeScripts/base/base.nuget.pack.cake"
 #load "CakeScripts/base/base.nuget.push.cake"
 #load "CakeScripts/base/base.docfx.cake"
 
