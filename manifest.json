@@ -9,31 +9,7 @@
       "output": {
         ".html": {
           "relative_path": "api/VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.html",
-          "hash": "6Q8DmwHMGQq/qjqTR8Y5AA=="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/VaraniumSharp.CompoundDocumentFormatStorage.Tests.CompoundFileManagerTests.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/VaraniumSharp.CompoundDocumentFormatStorage.Tests.CompoundFileManagerTests.html",
-          "hash": "DDb/Ufvru9OduDoMh+77lw=="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/VaraniumSharp.CompoundDocumentFormatStorage.Tests.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/VaraniumSharp.CompoundDocumentFormatStorage.Tests.html",
-          "hash": "wghLwVN6NGjLNXVcV4lpKQ=="
+          "hash": "ZxSNxRDbkp389ej01uwEXQ=="
         }
       },
       "is_incremental": false,
@@ -45,7 +21,7 @@
       "output": {
         ".html": {
           "relative_path": "api/VaraniumSharp.CompoundDocumentFormatStorage.html",
-          "hash": "hYwgKsIEhV87UohTjwJ9kg=="
+          "hash": "wBBoizLY7JTfzzfzdxOM6g=="
         }
       },
       "is_incremental": false,
@@ -57,7 +33,7 @@
       "output": {
         ".html": {
           "relative_path": "api/index.html",
-          "hash": "rJI7lnynbfCZAhJ13lj7qw=="
+          "hash": "xQFd55PgkLVZUhM6Mhgeow=="
         }
       },
       "is_incremental": false,
@@ -69,7 +45,7 @@
       "output": {
         ".html": {
           "relative_path": "api/toc.html",
-          "hash": "ldAyIkghBFQ+qwWgS9DAKA=="
+          "hash": "ICKWY8kYoSZIImq1TisADQ=="
         }
       },
       "is_incremental": false,
@@ -81,7 +57,7 @@
       "output": {
         ".html": {
           "relative_path": "articles/intro.html",
-          "hash": "LCCwcnAli/KcncnuavNhHQ=="
+          "hash": "mrvZZaH0YmCOIJ8ek96fWQ=="
         }
       },
       "is_incremental": false,
@@ -116,7 +92,7 @@
       "output": {
         ".html": {
           "relative_path": "index.html",
-          "hash": "JphRGbleJjairxyiOjDiTA=="
+          "hash": "PIyGY9ntmqEJb5FalJ8jmA=="
         }
       },
       "is_incremental": false,
@@ -140,26 +116,37 @@
       "status": {
         "can_incremental": false,
         "details": "Cannot build incrementally because last build info is missing.",
-        "incrementalPhase": "build"
+        "incrementalPhase": "build",
+        "total_file_count": 0,
+        "skipped_file_count": 0,
+        "full_build_reason_code": "NoAvailableBuildCache"
       },
       "processors": {
-        "TocDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build"
-        },
         "ConceptualDocumentProcessor": {
           "can_incremental": false,
-          "incrementalPhase": "build"
+          "incrementalPhase": "build",
+          "total_file_count": 3,
+          "skipped_file_count": 0
         },
         "ManagedReferenceDocumentProcessor": {
           "can_incremental": false,
-          "incrementalPhase": "build"
+          "incrementalPhase": "build",
+          "total_file_count": 2,
+          "skipped_file_count": 0
         },
         "ResourceDocumentProcessor": {
           "can_incremental": false,
           "details": "Processor ResourceDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build"
+          "incrementalPhase": "build",
+          "total_file_count": 0,
+          "skipped_file_count": 0
+        },
+        "TocDocumentProcessor": {
+          "can_incremental": false,
+          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "incrementalPhase": "build",
+          "total_file_count": 0,
+          "skipped_file_count": 0
         }
       }
     },
@@ -167,7 +154,9 @@
       "status": {
         "can_incremental": false,
         "details": "Cannot support incremental post processing, the reason is: last post processor info is null.",
-        "incrementalPhase": "postProcessing"
+        "incrementalPhase": "postProcessing",
+        "total_file_count": 0,
+        "skipped_file_count": 0
       },
       "processors": {}
     }
