@@ -25,7 +25,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
             _storageCollection = new ConcurrentDictionary<string, CFStorage>();
         }
 
-        #endregion Constructor
+        #endregion
 
         #region Properties
 
@@ -34,7 +34,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
         /// </summary>
         public string FilePath { get; }
 
-        #endregion Properties
+        #endregion
 
         #region Public Methods
 
@@ -70,7 +70,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
             return _storageCollection[directoryPath];
         }
 
-        #endregion Public Methods
+        #endregion
 
         #region Private Methods
 
@@ -85,7 +85,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
             var storage = compoundFile.RootStorage;
             foreach (var dir in SubFolders(directory))
             {
-                var subStorage = storage.TryGetStorage(dir);
+                storage.TryGetStorage(dir, out var subStorage);
                 if (subStorage == null)
                 {
                     subStorage = storage.AddStorage(dir);
@@ -136,7 +136,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
                 ?? new List<string>();
         }
 
-        #endregion Private Methods
+        #endregion
 
         #region Variables
 
@@ -150,6 +150,6 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
         /// </summary>
         private CompoundFile _compoundFile;
 
-        #endregion Variables
+        #endregion
     }
 }
