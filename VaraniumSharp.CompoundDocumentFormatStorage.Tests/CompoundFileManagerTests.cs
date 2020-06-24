@@ -12,6 +12,31 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
         #region Public Methods
 
         [Fact]
+        public async Task PackageIsClosedCorrectly()
+        {
+            // arrange
+            var appPath = AppDomain.CurrentDomain.BaseDirectory;
+            var packagePath = Path.Combine(appPath, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(appPath, ResourceDirectory, "File1.txt");
+            const string storagePath = "docs/File1.txt";
+
+            File.Exists(packagePath).Should().BeFalse();
+
+            var sut = new CompoundFileManager();
+            using (var fileStream = File.Open(filePath, FileMode.Open))
+            {
+                await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
+            }
+
+            // act
+            sut.ClosePackage(packagePath);
+
+            // assert
+            var act = new Action(() => File.Delete(packagePath));
+            act.Should().NotThrow<IOException>("If the file was closed we can delete it, otherwise an IO Exception is thrown");
+        }
+
+        [Fact]
         public async Task AddingDataWithTheSameInternalStoragePathAsExistingDataOverwritesTheExistingData()
         {
             // arrange
