@@ -29,7 +29,7 @@ Task ("VariableSetup")
 		botToken = EnvironmentVariable("BotToken");
 		gitRepo = string.Format("https://github.com/{0}/{1}.git", repoOwner, projectName);
 
-		AddNamespaceExclusion("Newtonsoft.Json");
+		AddNamespaceExclusion("Newtonsoft*");
 	});
 
 Task ("Default")
