@@ -27,6 +27,7 @@
   </metadata>
 
   <files>
+    <file src="../nugetIcon.png" target="\images" />
     <file src="./bin/Release/netstandard2.0/VaraniumSharp.CompoundDocumentFormatStorage.dll" target="lib\netstandard2.0" />
     <file src="./bin/Release/netstandard2.0/VaraniumSharp.CompoundDocumentFormatStorage.pdb" target="lib\netstandard2.0" />
     <file src="./bin/Release/netstandard2.0/VaraniumSharp.CompoundDocumentFormatStorage.xml" target="lib\netstandard2.0" />
