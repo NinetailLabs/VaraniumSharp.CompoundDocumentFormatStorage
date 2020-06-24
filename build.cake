@@ -6,7 +6,8 @@
 #load "CakeScripts/base/base.setup.cake"
 #load "CakeScripts/base/base.nuget.restore.cake"
 #load "CakeScripts/base/base.msbuild.cake"
-#load "CakeScripts/base/base.dotnetcoretest.minicover.cake"
+#load "CakeScripts/base/base.altcover.cake"
+#load "CakeScripts/base/base.coveralls.upload.cake"
 #load "CakeScripts/base/base.gitreleasenotes.cake"
 #load "CakeScripts/base/base.nuget.pack.cake"
 #load "CakeScripts/base/base.nuget.push.cake"
@@ -15,8 +16,6 @@
 #endregion
 
 #region Tasks
-
-SetMiniCoverToolsProject("./VaraniumSharp.CompoundDocumentFormatStorage.Tests/VaraniumSharp.CompoundDocumentFormatStorage.Tests.csproj");
 
 // Set up variables specific for the project
 Task ("VariableSetup")
@@ -29,6 +28,8 @@ Task ("VariableSetup")
 		botEmail = "gitbot@ninetaillabs.com";
 		botToken = EnvironmentVariable("BotToken");
 		gitRepo = string.Format("https://github.com/{0}/{1}.git", repoOwner, projectName);
+
+		AddNamespaceExclusion("Newtonsoft.Json");
 	});
 
 Task ("Default")
@@ -39,6 +40,7 @@ Task ("Default")
 	.IsDependentOn ("NugetRestore")
 	.IsDependentOn ("Build")
 	.IsDependentOn ("UnitTests")
+	.IsDependentOn ("CoverageUpload")
 	.IsDependentOn ("GenerateReleaseNotes")
 	.IsDependentOn ("NugetPack")
 	.IsDependentOn ("NugetPush")

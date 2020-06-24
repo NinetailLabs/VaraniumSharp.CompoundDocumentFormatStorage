@@ -26,14 +26,14 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
             _openCompoundFiles = new ConcurrentDictionary<string, CompoundFileContainer>();
         }
 
-        #endregion Constructor
+        #endregion
 
         #region Properties
 
         /// <inheritdoc />
         public bool AutoFlush { get; set; }
 
-        #endregion Properties
+        #endregion
 
         #region Public Methods
 
@@ -48,7 +48,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
                 var cf = GetCompoundFile(packagePath);
                 var (directory, filename) = SplitFilepath(storagePath);
                 var storage = cf.GetStorageForPath(directory);
-                var currentStream = storage.TryGetStream(filename);
+                storage.TryGetStream(filename, out var currentStream);
                 if (currentStream != null)
                 {
                     currentStream.CopyFrom(data);
@@ -60,6 +60,25 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
                 }
 
                 cf.Commit();
+            }
+            finally
+            {
+                semaphore.Release(1);
+            }
+        }
+
+        /// <inheritdoc />
+        public void ClosePackage(string packagePath)
+        {
+            var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
+
+            try
+            {
+                semaphore.Wait();
+                if (_openCompoundFiles.TryRemove(packagePath, out var fileToClose))
+                {
+                    fileToClose.Close();
+                }
             }
             finally
             {
@@ -106,7 +125,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
                 var (directory, filename) = SplitFilepath(storagePath);
                 var cf = GetCompoundFile(packagePath);
                 var storage = cf.GetStorageForPath(directory);
-                var stream = storage.TryGetStream(filename);
+                storage.TryGetStream(filename, out var stream);
                 if (stream == null)
                 {
                     await Task.Delay(1);
@@ -157,7 +176,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
             }
         }
 
-        #endregion Public Methods
+        #endregion
 
         #region Private Methods
 
@@ -189,7 +208,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
             return new ValueTuple<string, string>(directory, filename);
         }
 
-        #endregion Private Methods
+        #endregion
 
         #region Variables
 
@@ -203,6 +222,6 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
         /// </summary>
         private readonly ConcurrentDictionary<string, CompoundFileContainer> _openCompoundFiles;
 
-        #endregion Variables
+        #endregion
     }
 }
