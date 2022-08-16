@@ -9,32 +9,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
 {
     public class CompoundFileManagerTests
     {
-        #region Public Methods
-
-        [Fact]
-        public async Task PackageIsClosedCorrectly()
-        {
-            // arrange
-            var appPath = AppDomain.CurrentDomain.BaseDirectory;
-            var packagePath = Path.Combine(appPath, Guid.NewGuid().ToString());
-            var filePath = Path.Combine(appPath, ResourceDirectory, "File1.txt");
-            const string storagePath = "docs/File1.txt";
-
-            File.Exists(packagePath).Should().BeFalse();
-
-            var sut = new CompoundFileManager();
-            using (var fileStream = File.Open(filePath, FileMode.Open))
-            {
-                await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
-            }
-
-            // act
-            sut.ClosePackage(packagePath);
-
-            // assert
-            var act = new Action(() => File.Delete(packagePath));
-            act.Should().NotThrow<IOException>("If the file was closed we can delete it, otherwise an IO Exception is thrown");
-        }
+        private const string ResourceDirectory = "Resources";
 
         [Fact]
         public async Task AddingDataWithTheSameInternalStoragePathAsExistingDataOverwritesTheExistingData()
@@ -49,13 +24,13 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             File.Exists(packagePath).Should().BeFalse();
 
             var sut = new CompoundFileManager();
-            using (var fileStream = File.Open(filePath, FileMode.Open))
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
             }
 
             // act
-            using (var fileStream2 = File.Open(filePath2, FileMode.Open))
+            await using (var fileStream2 = File.Open(filePath2, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream2, storagePath);
             }
@@ -64,7 +39,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             var stream = await sut.RetrieveDataFromPackageAsync(packagePath, storagePath);
             using (var reader = new StreamReader(stream))
             {
-                reader.ReadLine().Should().Be("Overwriting data");
+                (await reader.ReadLineAsync()).Should().Be("Overwriting data");
             }
 
             sut.Dispose();
@@ -86,7 +61,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             {
                 AutoFlush = true
             };
-            using (var fileStream = File.Open(filePath, FileMode.Open))
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
             }
@@ -95,12 +70,12 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             var result = await sut.RetrieveDataFromPackageAsync(packagePath, storagePath);
 
             // assert
-            using (var fileData = File.OpenRead(filePath))
+            await using (var fileData = File.OpenRead(filePath))
             using (var streamReader = new StreamReader(fileData))
             using (var resultReader = new StreamReader(result))
             {
-                var expectedData = streamReader.ReadToEnd();
-                var resultData = resultReader.ReadToEnd();
+                var expectedData = await streamReader.ReadToEndAsync();
+                var resultData = await resultReader.ReadToEndAsync();
 
                 expectedData.Should().Be(resultData);
             }
@@ -123,7 +98,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             var sut = new CompoundFileManager();
 
             // act
-            using (var fileStream = File.Open(filePath, FileMode.Open))
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
             }
@@ -140,6 +115,67 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
         }
 
         [Fact]
+        public async Task PackageIsClosedCorrectly()
+        {
+            // arrange
+            var appPath = AppDomain.CurrentDomain.BaseDirectory;
+            var packagePath = Path.Combine(appPath, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(appPath, ResourceDirectory, "File1.txt");
+            const string storagePath = "docs/File1.txt";
+
+            File.Exists(packagePath).Should().BeFalse();
+
+            var sut = new CompoundFileManager();
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
+            {
+                await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
+            }
+
+            // act
+            sut.ClosePackage(packagePath);
+
+            // assert
+            var act = new Action(() => File.Delete(packagePath));
+            act.Should().NotThrow<IOException>("If the file was closed we can delete it, otherwise an IO Exception is thrown");
+        }
+
+        [Fact]
+        public async Task PackageReturnsAllContent()
+        {
+            // arrange
+            var appPath = AppDomain.CurrentDomain.BaseDirectory;
+            var packagePath = Path.Combine(appPath, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(appPath, ResourceDirectory, "File1.txt");
+            var filePath2 = Path.Combine(appPath, ResourceDirectory, "File2.txt");
+            const string storagePath1 = "docs/File1.txt";
+            const string storagePath2 = "docs/File2.txt";
+            var listToKeep = new List<string> { "docs" };
+
+            File.Exists(packagePath).Should().BeFalse();
+
+            var sut = new CompoundFileManager();
+            await using (var fileStream1 = File.Open(filePath, FileMode.Open))
+            await using (var fileStream2 = File.Open(filePath2, FileMode.Open))
+            {
+                await sut.AddItemToPackageAsync(packagePath, fileStream1, storagePath1);
+                await sut.AddItemToPackageAsync(packagePath, fileStream2, storagePath2);
+            }
+
+            // act
+            var feedback = await sut.GetPackageContentAsync(packagePath, listToKeep);
+
+            // assert
+            feedback.Count.Should().Be(2);
+            feedback[0].Path.Should().Be(storagePath1);
+            feedback[0].Size.Should().Be(14);
+            feedback[1].Path.Should().Be(storagePath2);
+            feedback[1].Size.Should().Be(19);
+
+            sut.Dispose();
+            File.Delete(packagePath);
+        }
+
+        [Fact]
         public async Task RemovingDataFromThePackageCorrectlyRemoveIt()
         {
             // arrange
@@ -151,7 +187,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             File.Exists(packagePath).Should().BeFalse();
 
             var sut = new CompoundFileManager();
-            using (var fileStream = File.Open(filePath, FileMode.Open))
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
             }
@@ -182,8 +218,8 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             File.Exists(packagePath).Should().BeFalse();
 
             var sut = new CompoundFileManager();
-            using (var fileStream1 = File.Open(filePath, FileMode.Open))
-            using (var fileStream2 = File.Open(filePath2, FileMode.Open))
+            await using (var fileStream1 = File.Open(filePath, FileMode.Open))
+            await using (var fileStream2 = File.Open(filePath2, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream1, storagePath1);
                 await sut.AddItemToPackageAsync(packagePath, fileStream2, storagePath2);
@@ -200,7 +236,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             sut.Dispose();
             File.Delete(packagePath);
         }
-        
+
         [Fact]
         public async Task ScrubbingPackageDoesNotRemoveDataForPathsThatWereRequestedToBeLeft()
         {
@@ -216,8 +252,8 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             File.Exists(packagePath).Should().BeFalse();
 
             var sut = new CompoundFileManager();
-            using (var fileStream1 = File.Open(filePath, FileMode.Open))
-            using (var fileStream2 = File.Open(filePath2, FileMode.Open))
+            await using (var fileStream1 = File.Open(filePath, FileMode.Open))
+            await using (var fileStream2 = File.Open(filePath2, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream1, storagePath1);
                 await sut.AddItemToPackageAsync(packagePath, fileStream2, storagePath2);
@@ -239,6 +275,42 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
         }
 
         [Fact]
+        public async Task ScrubbingPackageWithFeedbackReturnsScrubbedDetails()
+        {
+            // arrange
+            var appPath = AppDomain.CurrentDomain.BaseDirectory;
+            var packagePath = Path.Combine(appPath, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(appPath, ResourceDirectory, "File1.txt");
+            var filePath2 = Path.Combine(appPath, ResourceDirectory, "File2.txt");
+            const string storagePath1 = "docs/File1.txt";
+            const string storagePath2 = "docs/File2.txt";
+            var listToKeep = new List<string> { storagePath1 };
+
+            File.Exists(packagePath).Should().BeFalse();
+
+            var sut = new CompoundFileManager();
+            await using (var fileStream1 = File.Open(filePath, FileMode.Open))
+            await using (var fileStream2 = File.Open(filePath2, FileMode.Open))
+            {
+                await sut.AddItemToPackageAsync(packagePath, fileStream1, storagePath1);
+                await sut.AddItemToPackageAsync(packagePath, fileStream2, storagePath2);
+            }
+
+            // act
+            var feedback = await sut.ScrubStorageWithFeedbackAsync(packagePath, listToKeep);
+
+            // assert
+            feedback.Count.Should().Be(1);
+            feedback[0].Path.Should().Be(storagePath2);
+            feedback[0].Size.Should().Be(19);
+            var act = new Action(() => sut.RetrieveDataFromPackageAsync(packagePath, storagePath2).Wait());
+            act.Should().Throw<KeyNotFoundException>();
+            
+            sut.Dispose();
+            File.Delete(packagePath);
+        }
+
+        [Fact]
         public async Task StoredDataIsCorrectlyRetrievedFromThePackage()
         {
             // arrange
@@ -250,7 +322,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             File.Exists(packagePath).Should().BeFalse();
 
             var sut = new CompoundFileManager();
-            using (var fileStream = File.Open(filePath, FileMode.Open))
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
             }
@@ -261,7 +333,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             // assert
             using (var reader = new StreamReader(stream))
             {
-                reader.ReadLine().Should().Be("Test File 1");
+                (await reader.ReadLineAsync()).Should().Be("Test File 1");
             }
 
             sut.Dispose();
@@ -282,7 +354,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             var sut = new CompoundFileManager();
 
             // act
-            using (var fileStream = File.Open(filePath, FileMode.Open))
+            await using (var fileStream = File.Open(filePath, FileMode.Open))
             {
                 await sut.AddItemToPackageAsync(packagePath, fileStream, storagePath);
             }
@@ -309,13 +381,5 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             // assert
             act.Should().Throw<KeyNotFoundException>();
         }
-
-        #endregion
-
-        #region Variables
-
-        private const string ResourceDirectory = "Resources";
-
-        #endregion
     }
 }

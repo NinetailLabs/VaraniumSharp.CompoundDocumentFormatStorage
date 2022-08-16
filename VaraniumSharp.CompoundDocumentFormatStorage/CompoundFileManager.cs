@@ -96,6 +96,43 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
         }
 
         /// <inheritdoc />
+        public async Task<List<PackageEntry>> GetPackageContentAsync(string packagePath, List<string> storagePaths)
+        {
+            var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
+
+            try
+            {
+                var resultList = new List<PackageEntry>();
+
+                await semaphore.WaitAsync();
+
+                var cf = GetCompoundFile(packagePath);
+                foreach (var path in storagePaths)
+                {
+                    var storage = cf.GetStorageForPath(path);
+                    storage.VisitEntries(item =>
+                    {
+                        var entry = new PackageEntry
+                        {
+                            Path = $"{path}/{item.Name}",
+                            Size = item.Size
+                        };
+                        resultList.Add(entry);
+                        storage.Delete(item.Name);
+                    }, false);
+
+                    cf.Commit();
+                }
+
+                return resultList;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <inheritdoc />
         public async Task RemoveDataFromPackageAsync(string packagePath, string storagePath)
         {
             var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
@@ -144,10 +181,18 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
         /// <inheritdoc />
         public async Task ScrubStorageAsync(string packagePath, List<string> storagePathsToKeep)
         {
+            await ScrubStorageWithFeedbackAsync(packagePath, storagePathsToKeep).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<List<PackageEntry>> ScrubStorageWithFeedbackAsync(string packagePath, List<string> storagePathsToKeep)
+        {
             var semaphore = _containerLocks.GetOrAdd(packagePath, new SemaphoreSlim(1));
 
             try
             {
+                var resultList = new List<PackageEntry>();
+
                 await semaphore.WaitAsync();
 
                 var splitFiles = storagePathsToKeep
@@ -163,12 +208,20 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
                     {
                         if (!files.Contains(item.Name))
                         {
+                            var entry = new PackageEntry
+                            {
+                                Path = $"{group.Key}/{item.Name}",
+                                Size = item.Size
+                            };
+                            resultList.Add(entry);
                             storage.Delete(item.Name);
                         }
                     }, false);
 
                     cf.Commit();
                 }
+
+                return resultList;
             }
             finally
             {
