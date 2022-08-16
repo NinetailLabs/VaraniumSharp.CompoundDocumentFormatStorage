@@ -78,6 +78,22 @@ references:
   isSpec: "True"
   fullName: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.Dispose
   nameWithType: CompoundFileManager.Dispose
+- uid: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync(System.String,System.Collections.Generic.List{System.String})
+  name: GetPackageContentAsync(String, List<String>)
+  href: api/VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.html#VaraniumSharp_CompoundDocumentFormatStorage_CompoundFileManager_GetPackageContentAsync_System_String_System_Collections_Generic_List_System_String__
+  commentId: M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync(System.String,System.Collections.Generic.List{System.String})
+  name.vb: GetPackageContentAsync(String, List(Of String))
+  fullName: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync(System.String, System.Collections.Generic.List<System.String>)
+  fullName.vb: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync(System.String, System.Collections.Generic.List(Of System.String))
+  nameWithType: CompoundFileManager.GetPackageContentAsync(String, List<String>)
+  nameWithType.vb: CompoundFileManager.GetPackageContentAsync(String, List(Of String))
+- uid: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync*
+  name: GetPackageContentAsync
+  href: api/VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.html#VaraniumSharp_CompoundDocumentFormatStorage_CompoundFileManager_GetPackageContentAsync_
+  commentId: Overload:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync
+  isSpec: "True"
+  fullName: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.GetPackageContentAsync
+  nameWithType: CompoundFileManager.GetPackageContentAsync
 - uid: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.RemoveDataFromPackageAsync(System.String,System.String)
   name: RemoveDataFromPackageAsync(String, String)
   href: api/VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.html#VaraniumSharp_CompoundDocumentFormatStorage_CompoundFileManager_RemoveDataFromPackageAsync_System_String_System_String_
@@ -120,3 +136,19 @@ references:
   isSpec: "True"
   fullName: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageAsync
   nameWithType: CompoundFileManager.ScrubStorageAsync
+- uid: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync(System.String,System.Collections.Generic.List{System.String})
+  name: ScrubStorageWithFeedbackAsync(String, List<String>)
+  href: api/VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.html#VaraniumSharp_CompoundDocumentFormatStorage_CompoundFileManager_ScrubStorageWithFeedbackAsync_System_String_System_Collections_Generic_List_System_String__
+  commentId: M:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync(System.String,System.Collections.Generic.List{System.String})
+  name.vb: ScrubStorageWithFeedbackAsync(String, List(Of String))
+  fullName: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync(System.String, System.Collections.Generic.List<System.String>)
+  fullName.vb: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync(System.String, System.Collections.Generic.List(Of System.String))
+  nameWithType: CompoundFileManager.ScrubStorageWithFeedbackAsync(String, List<String>)
+  nameWithType.vb: CompoundFileManager.ScrubStorageWithFeedbackAsync(String, List(Of String))
+- uid: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync*
+  name: ScrubStorageWithFeedbackAsync
+  href: api/VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.html#VaraniumSharp_CompoundDocumentFormatStorage_CompoundFileManager_ScrubStorageWithFeedbackAsync_
+  commentId: Overload:VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync
+  isSpec: "True"
+  fullName: VaraniumSharp.CompoundDocumentFormatStorage.CompoundFileManager.ScrubStorageWithFeedbackAsync
+  nameWithType: CompoundFileManager.ScrubStorageWithFeedbackAsync
