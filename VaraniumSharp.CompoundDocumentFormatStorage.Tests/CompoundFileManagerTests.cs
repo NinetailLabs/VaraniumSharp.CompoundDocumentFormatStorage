@@ -175,6 +175,39 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage.Tests
             File.Delete(packagePath);
         }
 
+        // This fix ensures Issue #10 has been addressed
+        [Fact]
+        public async Task GettingPackageContentDoesNotDeleteEntries()
+        {
+            // arrange
+            var appPath = AppDomain.CurrentDomain.BaseDirectory;
+            var packagePath = Path.Combine(appPath, Guid.NewGuid().ToString());
+            var filePath = Path.Combine(appPath, ResourceDirectory, "File1.txt");
+            var filePath2 = Path.Combine(appPath, ResourceDirectory, "File2.txt");
+            const string storagePath1 = "docs/File1.txt";
+            const string storagePath2 = "docs/File2.txt";
+            var listToKeep = new List<string> { "docs" };
+
+            File.Exists(packagePath).Should().BeFalse();
+
+            var sut = new CompoundFileManager();
+            await using (var fileStream1 = File.Open(filePath, FileMode.Open))
+            await using (var fileStream2 = File.Open(filePath2, FileMode.Open))
+            {
+                await sut.AddItemToPackageAsync(packagePath, fileStream1, storagePath1);
+                await sut.AddItemToPackageAsync(packagePath, fileStream2, storagePath2);
+            }
+
+            // act
+            var feedback = await sut.GetPackageContentAsync(packagePath, listToKeep);
+
+            // assert
+            var entry1 = await sut.RetrieveDataFromPackageAsync(packagePath, storagePath1);
+            entry1.Should().NotBeNull();
+            var entry2 = await sut.RetrieveDataFromPackageAsync(packagePath, storagePath2);
+            entry2.Should().NotBeNull();
+        }
+
         [Fact]
         public async Task RemovingDataFromThePackageCorrectlyRemoveIt()
         {
