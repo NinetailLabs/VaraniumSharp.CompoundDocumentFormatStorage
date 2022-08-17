@@ -118,10 +118,7 @@ namespace VaraniumSharp.CompoundDocumentFormatStorage
                             Size = item.Size
                         };
                         resultList.Add(entry);
-                        storage.Delete(item.Name);
                     }, false);
-
-                    cf.Commit();
                 }
 
                 return resultList;
